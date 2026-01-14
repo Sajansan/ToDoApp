@@ -69,7 +69,7 @@ export default function TasksScreen() {
               <IconSymbol
                 name={
                   item.completed ? "checkmark.circle.fill" : "plus.circle.fill"
-                } // plus.circle as a placeholder for unticked
+                }
                 size={24}
                 color={item.completed ? "#34A853" : theme.icon}
               />
@@ -94,7 +94,7 @@ export default function TasksScreen() {
               >
                 <IconSymbol
                   name="square.and.pencil"
-                  size={20}
+                  size={24}
                   color="#4285F4"
                 />
               </TouchableOpacity>
@@ -102,7 +102,7 @@ export default function TasksScreen() {
                 onPress={() => deleteTodo(item.id)}
                 style={styles.actionButton}
               >
-                <IconSymbol name="trash.fill" size={20} color="#EA4335" />
+                <IconSymbol name="trash.fill" size={24} color="#EA4335" />
               </TouchableOpacity>
             </View>
           </View>
@@ -120,6 +120,8 @@ export default function TasksScreen() {
           </View>
         }
       />
+
+      <View style={{ height: 100 }} />
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}

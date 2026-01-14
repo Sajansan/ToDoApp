@@ -133,7 +133,7 @@ function StatCard({ title, value, icon, color, theme }: any) {
         },
       ]}
     >
-      <IconSymbol name={icon} size={24} color={color} />
+      <IconSymbol name={icon} size={32} color={color} />
       <Text style={[styles.statValue, { color: theme.text }]}>{value}</Text>
       <Text style={[styles.statTitle, { color: theme.icon }]}>{title}</Text>
     </View>
