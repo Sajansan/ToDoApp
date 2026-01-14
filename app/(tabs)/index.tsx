@@ -1,98 +1,245 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { Colors } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { useTodo } from "@/hooks/use-todo";
+import { Dimensions, ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const { width } = Dimensions.get("window");
 
-export default function HomeScreen() {
+export default function DashboardScreen() {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? "light"];
+  const { todos } = useTodo();
+
+  const total = todos.length;
+  const completed = todos.filter((t) => t.completed).length;
+  const pending = total - completed;
+  const progress = total > 0 ? (completed / total) * 100 : 0;
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.background }]}
+    >
+      <View style={styles.header}>
+        <Text style={[styles.greeting, { color: theme.text }]}>
+          Welcome Back!
+        </Text>
+        <Text style={[styles.subtitle, { color: theme.icon }]}>
+          Here's your productivity overview
+        </Text>
+      </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <View style={styles.statsContainer}>
+        <StatCard
+          title="Total"
+          value={total}
+          icon="list.bullet"
+          color="#4285F4"
+          theme={theme}
+        />
+        <StatCard
+          title="Pending"
+          value={pending}
+          icon="paperplane.fill"
+          color="#FBBC05"
+          theme={theme}
+        />
+        <StatCard
+          title="Done"
+          value={completed}
+          icon="checkmark.circle.fill"
+          color="#34A853"
+          theme={theme}
+        />
+      </View>
+
+      <View
+        style={[
+          styles.progressCard,
+          {
+            backgroundColor: theme.cardBackground,
+          },
+        ]}
+      >
+        <View style={styles.progressHeader}>
+          <Text style={[styles.progressTitle, { color: theme.text }]}>
+            Daily Progress
+          </Text>
+          <Text style={[styles.progressPercentage, { color: "#34A853" }]}>
+            {Math.round(progress)}%
+          </Text>
+        </View>
+        <View style={styles.progressBarBg}>
+          <View
+            style={[
+              styles.progressBarFill,
+              { width: `${progress}%`, backgroundColor: "#34A853" },
+            ]}
+          />
+        </View>
+      </View>
+
+      <View style={styles.recentHeader}>
+        <Text style={[styles.recentTitle, { color: theme.text }]}>
+          Recent Tasks
+        </Text>
+      </View>
+
+      <View style={styles.recentList}>
+        {todos.slice(0, 5).map((todo) => (
+          <View
+            key={todo.id}
+            style={[
+              styles.recentItem,
+              { borderBottomColor: theme.icon + "20" },
+            ]}
+          >
+            <IconSymbol
+              name={
+                todo.completed ? "checkmark.circle.fill" : "paperplane.fill"
+              }
+              size={18}
+              color={todo.completed ? "#34A853" : theme.icon}
+            />
+            <Text
+              numberOfLines={1}
+              style={[
+                styles.recentItemText,
+                { color: theme.text },
+                todo.completed && styles.completedText,
+              ]}
+            >
+              {todo.text}
+            </Text>
+          </View>
+        ))}
+        {todos.length === 0 && (
+          <Text style={[styles.emptyText, { color: theme.icon }]}>
+            No tasks yet. Start by adding some!
+          </Text>
+        )}
+      </View>
+    </ScrollView>
+  );
+}
+
+function StatCard({ title, value, icon, color, theme }: any) {
+  return (
+    <View
+      style={[
+        styles.statCard,
+        {
+          backgroundColor: theme.cardBackground,
+        },
+      ]}
+    >
+      <IconSymbol name={icon} size={24} color={color} />
+      <Text style={[styles.statValue, { color: theme.text }]}>{value}</Text>
+      <Text style={[styles.statTitle, { color: theme.icon }]}>{title}</Text>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
+    paddingTop: 60,
+    paddingHorizontal: 20,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  header: {
+    marginBottom: 30,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  greeting: {
+    fontSize: 28,
+    fontWeight: "700",
+  },
+  subtitle: {
+    fontSize: 16,
+    marginTop: 5,
+  },
+  statsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  statCard: {
+    width: (width - 60) / 3,
+    padding: 15,
+    borderRadius: 16,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginTop: 8,
+  },
+  statTitle: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  progressCard: {
+    padding: 20,
+    borderRadius: 20,
+    marginBottom: 30,
+  },
+  progressHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  progressTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+  },
+  progressPercentage: {
+    fontSize: 18,
+    fontWeight: "700",
+  },
+  progressBarBg: {
+    height: 10,
+    backgroundColor: "#e0e0e0",
+    borderRadius: 5,
+    overflow: "hidden",
+  },
+  progressBarFill: {
+    height: "100%",
+    borderRadius: 5,
+  },
+  recentHeader: {
+    marginBottom: 15,
+  },
+  recentTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+  },
+  recentList: {
+    marginBottom: 40,
+  },
+  recentItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+  },
+  recentItemText: {
+    fontSize: 16,
+    marginLeft: 12,
+    flex: 1,
+  },
+  completedText: {
+    textDecorationLine: "line-through",
+    opacity: 0.6,
+  },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 20,
+    fontSize: 14,
+    fontStyle: "italic",
   },
 });

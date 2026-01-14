@@ -1,112 +1,302 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import { Colors } from "@/constants/theme";
+import { useColorScheme } from "@/hooks/use-color-scheme";
+import { Todo, useTodo } from "@/hooks/use-todo";
+import { useState } from "react";
+import {
+  FlatList,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+export default function TasksScreen() {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? "light"];
+  const { todos, addTodo, toggleTodo, deleteTodo, updateTodo } = useTodo();
+  const [inputText, setInputText] = useState("");
+  const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+  const [editText, setEditText] = useState("");
 
-export default function TabTwoScreen() {
+  const handleAdd = () => {
+    if (inputText.trim()) {
+      addTodo(inputText.trim());
+      setInputText("");
+    }
+  };
+
+  const startEdit = (todo: Todo) => {
+    setEditingTodo(todo);
+    setEditText(todo.text);
+  };
+
+  const handleUpdate = () => {
+    if (editingTodo && editText.trim()) {
+      updateTodo(editingTodo.id, editText.trim());
+      setEditingTodo(null);
+    }
+  };
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: theme.text }]}>My Tasks</Text>
+      </View>
+
+      <FlatList
+        data={todos}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
+        renderItem={({ item }) => (
+          <View
+            style={[
+              styles.todoItem,
+              {
+                backgroundColor: theme.background,
+                borderBottomColor: theme.icon + "20",
+              },
+            ]}
+          >
+            <TouchableOpacity
+              onPress={() => toggleTodo(item.id)}
+              style={styles.checkbox}
+            >
+              <IconSymbol
+                name={
+                  item.completed ? "checkmark.circle.fill" : "plus.circle.fill"
+                } // plus.circle as a placeholder for unticked
+                size={24}
+                color={item.completed ? "#34A853" : theme.icon}
+              />
+            </TouchableOpacity>
+
+            <View style={styles.textContainer}>
+              <Text
+                style={[
+                  styles.todoText,
+                  { color: theme.text },
+                  item.completed && styles.completedText,
+                ]}
+              >
+                {item.text}
+              </Text>
+            </View>
+
+            <View style={styles.actions}>
+              <TouchableOpacity
+                onPress={() => startEdit(item)}
+                style={styles.actionButton}
+              >
+                <IconSymbol
+                  name="square.and.pencil"
+                  size={20}
+                  color="#4285F4"
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => deleteTodo(item.id)}
+                style={styles.actionButton}
+              >
+                <IconSymbol name="trash.fill" size={20} color="#EA4335" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <IconSymbol
+              name="list.bullet"
+              size={64}
+              color={theme.icon + "40"}
+            />
+            <Text style={[styles.emptyText, { color: theme.icon }]}>
+              No tasks yet
+            </Text>
+          </View>
+        }
+      />
+
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+        style={styles.inputWrapper}
+      >
+        <View
+          style={[
+            styles.inputContainer,
+            { backgroundColor: theme.cardBackground },
+          ]}
+        >
+          <TextInput
+            style={[styles.input, { color: theme.text }]}
+            placeholder="Add a new task..."
+            placeholderTextColor={theme.icon}
+            value={inputText}
+            onChangeText={setInputText}
+            onSubmitEditing={handleAdd}
+          />
+          <TouchableOpacity onPress={handleAdd} style={styles.addButton}>
+            <IconSymbol name="plus.circle.fill" size={28} color="#4285F4" />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
+
+      <Modal visible={!!editingTodo} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View
+            style={[styles.modalContent, { backgroundColor: theme.background }]}
+          >
+            <Text style={[styles.modalTitle, { color: theme.text }]}>
+              Edit Task
+            </Text>
+            <TextInput
+              style={[
+                styles.modalInput,
+                { color: theme.text, borderColor: theme.icon + "40" },
+              ]}
+              value={editText}
+              onChangeText={setEditText}
+              autoFocus
+            />
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                onPress={() => setEditingTodo(null)}
+                style={styles.modalButton}
+              >
+                <Text style={{ color: theme.icon }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleUpdate}
+                style={[styles.modalButton, styles.saveButton]}
+              >
+                <Text style={{ color: "#fff", fontWeight: "600" }}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
+    paddingTop: 60,
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  header: {
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+  },
+  listContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 100,
+  },
+  todoItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+  },
+  checkbox: {
+    marginRight: 12,
+  },
+  textContainer: {
+    flex: 1,
+  },
+  todoText: {
+    fontSize: 16,
+  },
+  completedText: {
+    textDecorationLine: "line-through",
+    opacity: 0.5,
+  },
+  actions: {
+    flexDirection: "row",
+  },
+  actionButton: {
+    marginLeft: 15,
+  },
+  inputWrapper: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 20,
+  },
+  inputContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 5,
+  },
+  input: {
+    flex: 1,
+    height: 40,
+    fontSize: 16,
+  },
+  addButton: {
+    marginLeft: 10,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    marginTop: 100,
+  },
+  emptyText: {
+    fontSize: 16,
+    marginTop: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalContent: {
+    width: "100%",
+    borderRadius: 20,
+    padding: 20,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 15,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 16,
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+  },
+  modalButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    marginLeft: 10,
+  },
+  saveButton: {
+    backgroundColor: "#4285F4",
   },
 });
